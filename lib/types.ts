@@ -1,8 +1,8 @@
-import { type ParsedUrlQuery } from 'node:querystring'
-
 import { type ExtendedRecordMap, type PageMap } from 'notion-types'
 
 export * from 'notion-types'
+
+export type ParsedUrlQuery = { [key: string]: string | string[] | undefined }
 
 export type NavigationStyle = 'default' | 'custom'
 
