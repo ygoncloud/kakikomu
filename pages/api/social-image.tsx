@@ -1,14 +1,14 @@
 import { type NextRequest } from 'next/server'
 import { ImageResponse } from 'next/og'
 
-import * as libConfig from '@/lib/config'
+import siteConfig from '@/site.config'
 import { type NotionPageInfo } from '@/lib/types'
 
 export const runtime = 'edge'
 
 export default async function OGImage(req: NextRequest) {
   const { searchParams } = new URL(req.url!)
-  const pageId = searchParams.get('id') || libConfig.rootNotionPageId
+  const pageId = searchParams.get('id') || siteConfig.rootNotionPageId
 
   const interSemiBoldFont = await fetch(
     new URL('../../public/fonts/inter-semibold.ttf', import.meta.url)
@@ -18,7 +18,10 @@ export default async function OGImage(req: NextRequest) {
     return new Response('Invalid notion page id', { status: 400 })
   }
 
-  const apiHost = libConfig.apiHost
+  const protocol = req.headers.get('x-forwarded-proto') || 'https'
+  const host = req.headers.get('host')
+  const apiHost = `${protocol}://${host}`
+
   const pageInfoRes = await fetch(
     `${apiHost}/api/notion-page-info?pageId=${encodeURIComponent(pageId)}`
   )
