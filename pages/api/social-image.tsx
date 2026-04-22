@@ -325,7 +325,7 @@ function getPageProperty<T>(
     const type = schema[propertyId].type
     if (type === 'date') {
       const date = propertyValue[0]?.[1]?.[0]?.[1]?.start_date
-      return date ? new Date(date).getTime() : null
+      return (date ? new Date(date).getTime() : null) as unknown as T
     }
 
     return getTextContent(propertyValue) as unknown as T
