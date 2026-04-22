@@ -19,7 +19,7 @@ import {
   type Site
 } from './types'
 
-export const parsePageId = (id: string, { uuid = true } = {}) => {
+export const parsePageId = (id?: string | null, { uuid = true } = {}) => {
   if (!id) {
     return null
   }
