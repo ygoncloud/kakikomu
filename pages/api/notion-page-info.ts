@@ -21,7 +21,7 @@ export default async function notionPageInfo(
     const recordMap = await notion.getPage(parsedPageId)
 
     const keys = Object.keys(recordMap?.block || {})
-    const block = recordMap?.block?.[keys[0]!]?.value
+    const block = getBlockValue(recordMap?.block?.[keys[0]!]) as any
 
     if (!block) {
       return res.status(404).json({ error: 'Page not found' })

@@ -4,6 +4,7 @@
  * This file pulls from the root "site.config.ts" as well as environment variables
  * for optional depenencies.
  */
+import { parsePageId } from 'notion-utils'
 import { type PostHogConfig } from 'posthog-js'
 
 import {
@@ -19,35 +20,9 @@ import {
   type Site
 } from './types'
 
-export const parsePageId = (id?: string | null, { uuid = true } = {}) => {
-  if (!id) {
-    return null
-  }
-
-  if (uuid) {
-    if (id.includes('-')) {
-      return id
-    }
-
-    return (
-      id.substring(0, 8) +
-      '-' +
-      id.substring(8, 12) +
-      '-' +
-      id.substring(12, 16) +
-      '-' +
-      id.substring(16, 20) +
-      '-' +
-      id.substring(20)
-    )
-  }
-
-  return id.replace(/-/g, '')
-}
-
 export const rootNotionPageId: string = parsePageId(
   getSiteConfig('rootNotionPageId'),
-  { uuid: false }
+  { uuid: true }
 )!
 
 if (!rootNotionPageId) {
@@ -205,7 +180,7 @@ function cleanPageUrlMap(
 ): PageUrlOverridesMap {
   return Object.keys(pageUrlMap).reduce((acc, uri) => {
     const pageId = pageUrlMap[uri]
-    const uuid = parsePageId(pageId, { uuid: false })
+    const uuid = parsePageId(pageId, { uuid: true })
 
     if (!uuid) {
       throw new Error(`Invalid ${label} page id "${pageId}"`)
