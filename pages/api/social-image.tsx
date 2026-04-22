@@ -1,20 +1,7 @@
-import ky from 'ky'
 import { type NextApiRequest, type NextApiResponse } from 'next'
 import { ImageResponse } from 'next/og'
-import { type PageBlock } from 'notion-types'
-import {
-  getBlockIcon,
-  getBlockTitle,
-  getBlockValue,
-  getPageProperty,
-  isUrl,
-  parsePageId
-} from 'notion-utils'
 
 import * as libConfig from '@/lib/config'
-import interSemiBoldFont from '@/lib/fonts/inter-semibold'
-import { mapImageUrl } from '@/lib/map-image-url'
-import { notion } from '@/lib/notion-api'
 import { type NotionPageInfo, type PageError } from '@/lib/types'
 
 export const runtime = 'edge'
@@ -24,21 +11,29 @@ export default async function OGImage(
   res: NextApiResponse
 ) {
   const { searchParams } = new URL(req.url!)
-  const pageId = parsePageId(
-    searchParams.get('id') || libConfig.rootNotionPageId
-  )
+  const pageId = searchParams.get('id') || libConfig.rootNotionPageId
+
+  const interSemiBoldFont = await fetch(
+    new URL('../../public/fonts/inter-semibold.ttf', import.meta.url)
+  ).then((res) => res.arrayBuffer())
+
   if (!pageId) {
     return new Response('Invalid notion page id', { status: 400 })
   }
 
-  const pageInfoOrError = await getNotionPageInfo({ pageId })
+  const { parsePageId } = await import('notion-utils')
+  const parsedPageId = parsePageId(pageId)
+  if (!parsedPageId) {
+    return new Response('Invalid notion page id', { status: 400 })
+  }
+
+  const pageInfoOrError = await getNotionPageInfo({ pageId: parsedPageId })
   if (pageInfoOrError.type === 'error') {
     return res.status(pageInfoOrError.error.statusCode).send({
       error: pageInfoOrError.error.message
     })
   }
   const pageInfo = pageInfoOrError.data
-  console.log(pageInfo)
 
   return new ImageResponse(
     <div
@@ -172,6 +167,16 @@ export async function getNotionPageInfo({
   | { type: 'success'; data: NotionPageInfo }
   | { type: 'error'; error: PageError }
 > {
+  const { notion } = await import('@/lib/notion-api')
+  const {
+    getBlockIcon,
+    getBlockTitle,
+    getBlockValue,
+    getPageProperty,
+    isUrl
+  } = await import('notion-utils')
+  const { mapImageUrl } = await import('@/lib/map-image-url')
+
   const recordMap = await notion.getPage(pageId)
 
   const keys = Object.keys(recordMap?.block || {})
@@ -202,7 +207,7 @@ export async function getNotionPageInfo({
   const title = getBlockTitle(block, recordMap) || libConfig.name
 
   const imageCoverPosition =
-    (block as PageBlock).format?.page_cover_position ??
+    (block as any).format?.page_cover_position ??
     libConfig.defaultPageCoverPosition
   const imageObjectPosition = imageCoverPosition
     ? `center ${(1 - imageCoverPosition) * 100}%`
@@ -210,7 +215,7 @@ export async function getNotionPageInfo({
 
   const imageBlockUrl = mapImageUrl(
     getPageProperty<string>('Social Image', block, recordMap) ||
-      (block as PageBlock).format?.page_cover,
+      (block as any).format?.page_cover,
     block
   )
   const imageFallbackUrl = mapImageUrl(libConfig.defaultPageCover, block)
@@ -229,22 +234,8 @@ export async function getNotionPageInfo({
   const author =
     getPageProperty<string>('Author', block, recordMap) || libConfig.author
 
-  // const socialDescription =
-  //   getPageProperty<string>('Description', block, recordMap) ||
-  //   libConfig.description
-
-  // const lastUpdatedTime = getPageProperty<number>(
-  //   'Last Updated',
-  //   block,
-  //   recordMap
-  // )
   const publishedTime = getPageProperty<number>('Published', block, recordMap)
   const datePublished = publishedTime ? new Date(publishedTime) : undefined
-  // const dateUpdated = lastUpdatedTime
-  //   ? new Date(lastUpdatedTime)
-  //   : publishedTime
-  //   ? new Date(publishedTime)
-  //   : undefined
   const date =
     isBlogPost && datePublished
       ? `${datePublished.toLocaleString('en-US', {
@@ -277,8 +268,8 @@ async function isUrlReachable(
   }
 
   try {
-    await ky.head(url)
-    return true
+    const res = await fetch(url, { method: 'HEAD' })
+    return res.ok
   } catch {
     return false
   }

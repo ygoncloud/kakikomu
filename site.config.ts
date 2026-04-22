@@ -2,24 +2,24 @@ import { siteConfig } from './lib/site-config'
 
 export default siteConfig({
   // the site's root Notion page (required)
-  rootNotionPageId: '7875426197cf461698809def95960ebf',
+  rootNotionPageId: '23682bf0c3fd805190d6efb68e00e912',
 
   // if you want to restrict pages to a single notion workspace (optional)
   // (this should be a Notion ID; see the docs for how to extract this)
   rootNotionSpaceId: null,
 
   // basic site info (required)
-  name: 'Next.js Notion Starter Kit',
-  domain: 'nextjs-notion-starter-kit.transitivebullsh.it',
-  author: 'Travis Fischer',
+  name: 'kakikomu - To write in',
+  domain: 'kakikomu.vercel.app',
+  author: 'mumeyong',
 
   // open graph metadata (optional)
-  description: 'Example Next.js Notion Starter Kit Site',
+  description: 'kakikomu - To write in',
 
   // social usernames (optional)
-  twitter: 'transitive_bs',
-  github: 'transitive-bullshit',
-  linkedin: 'fisch2',
+  twitter: 'mumeyong',
+  github: 'mumeyong',
+  linkedin: 'mumeyong',
   // mastodon: '#', // optional mastodon profile URL, provides link verification
   // newsletter: '#', // optional newsletter URL
   // youtube: '#', // optional youtube channel name or `channel/UCGbXXXXXXXXXXXXXXXXXXXXXX`
