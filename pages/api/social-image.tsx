@@ -21,7 +21,6 @@ export default async function OGImage(
     return new Response('Invalid notion page id', { status: 400 })
   }
 
-  const { parsePageId } = await import('notion-utils')
   const parsedPageId = parsePageId(pageId)
   if (!parsedPageId) {
     return new Response('Invalid notion page id', { status: 400 })
@@ -29,8 +28,8 @@ export default async function OGImage(
 
   const pageInfoOrError = await getNotionPageInfo({ pageId: parsedPageId })
   if (pageInfoOrError.type === 'error') {
-    return res.status(pageInfoOrError.error.statusCode).send({
-      error: pageInfoOrError.error.message
+    return new Response(pageInfoOrError.error.message, {
+      status: pageInfoOrError.error.statusCode
     })
   }
   const pageInfo = pageInfoOrError.data
@@ -168,13 +167,6 @@ export async function getNotionPageInfo({
   | { type: 'error'; error: PageError }
 > {
   const { notion } = await import('@/lib/notion-api')
-  const {
-    getBlockIcon,
-    getBlockTitle,
-    getBlockValue,
-    getPageProperty,
-    isUrl
-  } = await import('notion-utils')
   const { mapImageUrl } = await import('@/lib/map-image-url')
 
   const recordMap = await notion.getPage(pageId)
@@ -258,6 +250,115 @@ export async function getNotionPageInfo({
     type: 'success',
     data: pageInfo
   }
+}
+
+function getBlockValue(block: any) {
+  return block?.value || block
+}
+
+function getBlockTitle(block: any, recordMap: any) {
+  if (block.properties?.title) {
+    return getTextContent(block.properties.title)
+  }
+
+  if (
+    (block.type === 'collection_view_page' ||
+      block.type === 'collection_view') &&
+    recordMap.collection
+  ) {
+    const collectionId = block.collection_id
+    const collection = recordMap.collection[collectionId]?.value
+    if (collection?.name) {
+      return getTextContent(collection.name)
+    }
+  }
+
+  return ''
+}
+
+function getBlockIcon(block: any, recordMap: any) {
+  if (block.format?.page_icon) {
+    return block.format.page_icon
+  }
+
+  if (
+    (block.type === 'collection_view_page' ||
+      block.type === 'collection_view') &&
+    recordMap.collection
+  ) {
+    const collectionId = block.collection_id
+    const collection = recordMap.collection[collectionId]?.value
+    if (collection?.icon) {
+      return collection.icon
+    }
+  }
+
+  return null
+}
+
+function getPageProperty<T>(
+  propertyName: string,
+  block: any,
+  recordMap: any
+): T | null {
+  try {
+    const collectionId = block.collection_id
+    const collection = recordMap.collection?.[collectionId]?.value
+    if (!collection) {
+      return null
+    }
+
+    const schema = collection.schema
+    const propertyId = Object.keys(schema).find(
+      (key) => schema[key].name.toLowerCase() === propertyName.toLowerCase()
+    )
+
+    if (!propertyId) {
+      return null
+    }
+
+    const propertyValue = block.properties?.[propertyId]
+    if (!propertyValue) {
+      return null
+    }
+
+    const type = schema[propertyId].type
+    if (type === 'date') {
+      const date = propertyValue[0]?.[1]?.[0]?.[1]?.start_date
+      return date ? new Date(date).getTime() : null
+    }
+
+    return getTextContent(propertyValue) as unknown as T
+  } catch {
+    return null
+  }
+}
+
+function getTextContent(text: any): string {
+  if (!text) {
+    return ''
+  }
+
+  if (Array.isArray(text)) {
+    return text
+      .map((t) => (Array.isArray(t) ? t[0] : t))
+      .filter((t) => typeof t === 'string')
+      .join('')
+  }
+
+  return String(text)
+}
+
+function isUrl(url: string | undefined | null): boolean {
+  if (!url) {
+    return false
+  }
+
+  return /^(https?:\/\/|data:)/i.test(url)
+}
+
+function parsePageId(id: string) {
+  return libConfig.parsePageId(id)
 }
 
 async function isUrlReachable(
