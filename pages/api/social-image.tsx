@@ -1,10 +1,19 @@
 import { type NextRequest } from 'next/server'
 import { ImageResponse } from 'next/og'
 
-import siteConfig from '@/site.config'
-import { type NotionPageInfo } from '@/lib/types'
+import siteConfig from '../../site.config'
 
 export const runtime = 'edge'
+
+export interface NotionPageInfo {
+  pageId: string
+  title: string
+  image?: string
+  imageObjectPosition?: string
+  author?: string
+  authorImage?: string
+  detail?: string
+}
 
 export default async function OGImage(req: NextRequest) {
   const { searchParams } = new URL(req.url!)
