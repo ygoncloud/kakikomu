@@ -96,6 +96,10 @@ export default async function notionPageInfo(
   }
 }
 
+function getBlockValue(block: any) {
+  return block?.value || block
+}
+
 function getBlockTitle(block: any, recordMap: any) {
   if (block.properties?.title) {
     return getTextContent(block.properties.title)
