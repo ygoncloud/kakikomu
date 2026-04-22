@@ -28,7 +28,7 @@ export default async function OGImage(req: NextRequest) {
     return new Response(error, { status: pageInfoRes.status })
   }
 
-  const pageInfo: NotionPageInfo = await pageInfoRes.json()
+  const pageInfo: NotionPageInfo = (await pageInfoRes.json()) as NotionPageInfo
 
   return new ImageResponse(
     <div
