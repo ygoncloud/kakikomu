@@ -1,4 +1,4 @@
-import { getBlockValue } from 'notion-utils'
+import { getBlockValue, getPageProperty } from 'notion-utils'
 
 import type { PageProps } from './types'
 
@@ -38,6 +38,25 @@ export async function pageAcl({
   }
 
   const rootValue = getBlockValue(recordMap.block[rootKey])
+  const isPublic = getPageProperty<boolean | null>('Public', rootValue!, recordMap)
+  const isPublished =
+    getPageProperty<boolean | null>('Published', rootValue!, recordMap) ||
+    getPageProperty<boolean | null>('publish', rootValue!, recordMap)
+  const status = getPageProperty<string | null>('Status', rootValue!, recordMap)
+
+  if (
+    isPublic === false ||
+    isPublished === false ||
+    (status && status !== 'Published' && status !== 'Public')
+  ) {
+    return {
+      error: {
+        statusCode: 404,
+        message: `Notion page "${pageId}" is not public.`
+      }
+    }
+  }
+
   const rootSpaceId = rootValue?.space_id
 
   if (

@@ -210,6 +210,11 @@ export function NotionPage({
   const router = useRouter()
   const lite = useSearchParam('lite')
 
+  const [hasMounted, setHasMounted] = React.useState(false)
+  React.useEffect(() => {
+    setHasMounted(true)
+  }, [])
+
   // lite mode is for oembed
   const isLiteMode = lite === 'true'
 
@@ -299,14 +304,14 @@ export function NotionPage({
       />
 
       {isLiteMode && <BodyClassName className='notion-lite' />}
-      {isDarkMode && <BodyClassName className='dark-mode' />}
+      {hasMounted && isDarkMode && <BodyClassName className='dark-mode' />}
 
       <NotionRenderer
         bodyClassName={cs(
           styles.notion,
           pageId === site.rootNotionPageId && 'index-page'
         )}
-        darkMode={isDarkMode}
+        darkMode={hasMounted ? isDarkMode : false}
         components={notionRendererComponents}
         recordMap={recordMap}
         rootPageId={site.rootNotionPageId}

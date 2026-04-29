@@ -11,15 +11,15 @@ export default siteConfig({
   // basic site info (required)
   name: 'kakikomu - To write in',
   domain: 'kakikomu.vercel.app',
-  author: 'mumeyong',
+  author: 'ygoncloud',
 
   // open graph metadata (optional)
   description: 'kakikomu - To write in',
 
   // social usernames (optional)
-  twitter: 'mumeyong',
-  github: 'mumeyong',
-  linkedin: 'mumeyong',
+  twitter: 'ygoncloud',
+  github: 'ygoncloud',
+  linkedin: 'ygoncloud',
   // mastodon: '#', // optional mastodon profile URL, provides link verification
   // newsletter: '#', // optional newsletter URL
   // youtube: '#', // optional youtube channel name or `channel/UCGbXXXXXXXXXXXXXXXXXXXXXX`
@@ -46,20 +46,17 @@ export default siteConfig({
   //   '/foo': '067dd719a912471ea9a3ac10710e7fdf',
   //   '/bar': '0be6efce9daf42688f65c76b89f8eb27'
   // }
-  pageUrlOverrides: null,
+  // pageUrlOverrides: {
+  //   '/cybersec': '34e82bf0c3fd80298fd1fd540145f271'
+  // },
 
   // whether to use the default notion navigation style or a custom one with links to
   // important pages. To use `navigationLinks`, set `navigationStyle` to `custom`.
-  navigationStyle: 'default'
   // navigationStyle: 'custom',
   // navigationLinks: [
   //   {
-  //     title: 'About',
-  //     pageId: 'f1199d37579b41cbabfc0b5174f4256a'
-  //   },
-  //   {
-  //     title: 'Contact',
-  //     pageId: '6a29ebcb935a4f0689fe661ab5f3b8d1'
+  //     title: 'CyberSec',
+  //     pageId: '34e82bf0c3fd80298fd1fd540145f271'
   //   }
   // ]
 })
