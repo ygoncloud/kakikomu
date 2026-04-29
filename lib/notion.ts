@@ -112,9 +112,14 @@ export async function getPage(pageId: string): Promise<ExtendedRecordMap> {
       for (const viewId of Object.keys(views)) {
         const queryResult = views[viewId]
         if (queryResult?.collection_group_results) {
-          for (const group of queryResult.collection_group_results) {
-            if (group.blockIds) {
-              group.blockIds = group.blockIds.filter((id) => recordMap.block[id])
+          const groupResults = queryResult.collection_group_results
+          if (Array.isArray(groupResults)) {
+            for (const group of groupResults) {
+              if (group.blockIds) {
+                group.blockIds = group.blockIds.filter(
+                  (id) => recordMap.block[id]
+                )
+              }
             }
           }
         }
