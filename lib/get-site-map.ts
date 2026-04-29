@@ -66,15 +66,19 @@ async function getAllPagesImpl(
       }
 
       const block = getBlockValue(recordMap.block[pageId])
-      const isPublic = getPageProperty<boolean | null>('Public', block!, recordMap)
+      const isPublic =
+        getPageProperty<boolean | null>('Public', block!, recordMap) ??
+        getPageProperty<boolean | null>('public', block!, recordMap)
       const isPublished =
-        getPageProperty<boolean | null>('Published', block!, recordMap) ||
-        getPageProperty<boolean | null>('publish', block!, recordMap)
+        getPageProperty<boolean | null>('Published', block!, recordMap) ??
+        getPageProperty<boolean | null>('published', block!, recordMap)
+      const isPublish = getPageProperty<boolean | null>('publish', block!, recordMap)
       const status = getPageProperty<string | null>('Status', block!, recordMap)
 
       if (
         isPublic === false ||
         isPublished === false ||
+        isPublish === false ||
         (status && status !== 'Published' && status !== 'Public')
       ) {
         return map

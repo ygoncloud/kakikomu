@@ -67,6 +67,31 @@ export async function getPage(pageId: string): Promise<ExtendedRecordMap> {
 
   await getTweetsMap(recordMap)
 
+  if (recordMap.block) {
+    for (const id of Object.keys(recordMap.block)) {
+      const block = getBlockValue(recordMap.block[id])
+      if (block?.type === 'page' && id !== pageId) {
+        const isPublic =
+          getPageProperty<boolean | null>('Public', block, recordMap) ??
+          getPageProperty<boolean | null>('public', block, recordMap)
+        const isPublished =
+          getPageProperty<boolean | null>('Published', block, recordMap) ??
+          getPageProperty<boolean | null>('published', block, recordMap)
+        const isPublish = getPageProperty<boolean | null>('publish', block, recordMap)
+        const status = getPageProperty<string | null>('Status', block, recordMap)
+
+        if (
+          isPublic === false ||
+          isPublished === false ||
+          isPublish === false ||
+          (status && status !== 'Published' && status !== 'Public')
+        ) {
+          delete recordMap.block[id]
+        }
+      }
+    }
+  }
+
   return recordMap
 }
 
