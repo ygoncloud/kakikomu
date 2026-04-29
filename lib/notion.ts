@@ -3,7 +3,7 @@ import {
   type SearchParams,
   type SearchResults
 } from 'notion-types'
-import { mergeRecordMaps } from 'notion-utils'
+import { getBlockValue, getPageProperty, mergeRecordMaps } from 'notion-utils'
 import pMap from 'p-map'
 import pMemoize from 'p-memoize'
 
@@ -68,25 +68,60 @@ export async function getPage(pageId: string): Promise<ExtendedRecordMap> {
   await getTweetsMap(recordMap)
 
   if (recordMap.block) {
+    const rootBlockId = Object.keys(recordMap.block)[0]
     for (const id of Object.keys(recordMap.block)) {
       const block = getBlockValue(recordMap.block[id])
-      if (block?.type === 'page' && id !== pageId) {
+      if (
+        block &&
+        (block.type === 'page' || block.type === 'collection_view_page') &&
+        id !== pageId &&
+        id !== rootBlockId
+      ) {
         const isPublic =
           getPageProperty<boolean | null>('Public', block, recordMap) ??
-          getPageProperty<boolean | null>('public', block, recordMap)
+          getPageProperty<boolean | null>('public', block, recordMap) ??
+          getPageProperty<boolean | null>('Public?', block, recordMap)
         const isPublished =
           getPageProperty<boolean | null>('Published', block, recordMap) ??
           getPageProperty<boolean | null>('published', block, recordMap)
         const isPublish = getPageProperty<boolean | null>('publish', block, recordMap)
-        const status = getPageProperty<string | null>('Status', block, recordMap)
+        const status =
+          getPageProperty<string | null>('Status', block, recordMap) ||
+          getPageProperty<string | null>('status', block, recordMap)
 
         if (
           isPublic === false ||
           isPublished === false ||
           isPublish === false ||
-          (status && status !== 'Published' && status !== 'Public')
+          (status &&
+            status !== 'Published' &&
+            status !== 'Public' &&
+            status !== 'Done' &&
+            status !== 'Active')
         ) {
           delete recordMap.block[id]
+        }
+      }
+    }
+  }
+
+  if (recordMap.collection_query) {
+    for (const collectionId of Object.keys(recordMap.collection_query)) {
+      const views = recordMap.collection_query[collectionId]
+      if (!views) continue
+      for (const viewId of Object.keys(views)) {
+        const queryResult = views[viewId]
+        if (queryResult?.collection_group_results) {
+          for (const group of queryResult.collection_group_results) {
+            if (group.blockIds) {
+              group.blockIds = group.blockIds.filter((id) => recordMap.block[id])
+            }
+          }
+        }
+        if (queryResult?.blockIds) {
+          queryResult.blockIds = queryResult.blockIds.filter(
+            (id) => recordMap.block[id]
+          )
         }
       }
     }
