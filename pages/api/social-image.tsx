@@ -1,5 +1,3 @@
-import ky from 'ky'
-import { type NextApiRequest, type NextApiResponse } from 'next'
 import { ImageResponse } from 'next/og'
 import { type PageBlock } from 'notion-types'
 import {
@@ -12,17 +10,13 @@ import {
 } from 'notion-utils'
 
 import * as libConfig from '@/lib/config'
-import interSemiBoldFont from '@/lib/fonts/inter-semibold'
 import { mapImageUrl } from '@/lib/map-image-url'
 import { notion } from '@/lib/notion-api'
 import { type NotionPageInfo, type PageError } from '@/lib/types'
 
 export const runtime = 'edge'
 
-export default async function OGImage(
-  req: NextApiRequest,
-  res: NextApiResponse
-) {
+export default async function OGImage(req: Request) {
   const { searchParams } = new URL(req.url!)
   const pageId = parsePageId(
     searchParams.get('id') || libConfig.rootNotionPageId
@@ -33,12 +27,15 @@ export default async function OGImage(
 
   const pageInfoOrError = await getNotionPageInfo({ pageId })
   if (pageInfoOrError.type === 'error') {
-    return res.status(pageInfoOrError.error.statusCode).send({
-      error: pageInfoOrError.error.message
-    })
+    return new Response(
+      JSON.stringify({ error: pageInfoOrError.error.message }),
+      {
+        status: pageInfoOrError.error.statusCode,
+        headers: { 'content-type': 'application/json' }
+      }
+    )
   }
   const pageInfo = pageInfoOrError.data
-  console.log(pageInfo)
 
   return new ImageResponse(
     <div
@@ -62,19 +59,6 @@ export default async function OGImage(
             width: '100%',
             height: '100%',
             objectFit: 'cover'
-            // TODO: satori doesn't support background-size: cover and seems to
-            // have inconsistent support for filter + transform to get rid of the
-            // blurred edges. For now, we'll go without a blur filter on the
-            // background, but Satori is still very new, so hopefully we can re-add
-            // the blur soon.
-
-            // backgroundImage: pageInfo.image
-            //   ? `url(${pageInfo.image})`
-            //   : undefined,
-            // backgroundSize: '100% 100%'
-            // TODO: pageInfo.imageObjectPosition
-            // filter: 'blur(8px)'
-            // transform: 'scale(1.05)'
           }}
         />
       )}
@@ -143,7 +127,6 @@ export default async function OGImage(
             style={{
               width: '100%',
               height: '100%'
-              // transform: 'scale(1.04)'
             }}
           />
         </div>
@@ -151,15 +134,7 @@ export default async function OGImage(
     </div>,
     {
       width: 1200,
-      height: 630,
-      fonts: [
-        {
-          name: 'Inter',
-          data: interSemiBoldFont,
-          style: 'normal',
-          weight: 700
-        }
-      ]
+      height: 630
     }
   )
 }
@@ -277,8 +252,8 @@ async function isUrlReachable(
   }
 
   try {
-    await ky.head(url)
-    return true
+    const res = await fetch(url, { method: 'HEAD' })
+    return res.ok
   } catch {
     return false
   }
