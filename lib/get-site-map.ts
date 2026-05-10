@@ -1,3 +1,4 @@
+import ExpiryMap from 'expiry-map'
 import {
   getAllPagesInSpace,
   getBlockValue,
@@ -27,7 +28,8 @@ export async function getSiteMap(): Promise<types.SiteMap> {
 }
 
 const getAllPages = pMemoize(getAllPagesImpl, {
-  cacheKey: (...args) => JSON.stringify(args)
+  cacheKey: (...args) => JSON.stringify(args),
+  cache: new ExpiryMap(15 * 60 * 1000) // 15 minutes
 })
 
 const getPage = async (pageId: string, opts?: any) => {
@@ -44,7 +46,7 @@ async function getAllPagesImpl(
   rootNotionPageId: string,
   rootNotionSpaceId?: string,
   {
-    maxDepth = 1
+    maxDepth = 5
   }: {
     maxDepth?: number
   } = {}
